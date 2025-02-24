@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="images1">
+    <file>lufy.png</file>
+    <file>ace.jpg</file>
+    <file>one_Piece.jpg</file>
+  </qresource>
+</RCC>
