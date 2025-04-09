@@ -25,3 +25,5 @@ To set up the Library Management System on your local machine, follow these step
    ```bash  
    git clone https://github.com/yourusername/library-management-system.git  
    cd library-management-system  
+
+docker run -it --rm --entrypoint sh chivas-vs-atlas

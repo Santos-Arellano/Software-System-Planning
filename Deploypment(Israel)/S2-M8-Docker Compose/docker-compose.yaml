@@ -1,0 +1,22 @@
+# Version de docker compose
+version: "3"
+
+# Define los diferentes servicios de la aplicación
+# Cada servicio se ejecuta en su propio contenedor
+services:
+  # Servicios
+  # Aquí se define el servicio mi-web-basica
+  mi-web-basica:
+    # build: indica que se va a construir una imagen personalizada
+    build:
+      # context: indica que el contexto de construcción es el directorio actual
+      context: .
+      # dockerfile: Usa un Dockerfile para construir la imagen
+      dockerfile: Dockerfile
+    # Indica el mapeo de puertos entre el host (tu máquina) y el contenedor
+    # "8700:80" significa:
+    # El puerto 8700 del host (por ejemplo, http://localhost:8700) se redirige
+    # al puerto 80 del contenedor (donde típicamente corre un servidor web
+    # como Apache o Nginx)
+    ports:
+      - "8700:80"
