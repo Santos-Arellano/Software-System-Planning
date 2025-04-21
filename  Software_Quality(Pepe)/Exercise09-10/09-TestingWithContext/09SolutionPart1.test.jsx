@@ -1,6 +1,6 @@
 ///Users/santosa/Documents/GitHub/Software-System-Planning/ Software_Quality(Pepe)/Exercise09-10/09-TestingWithContext/09SolutionPart1.test.jsx
 import React from 'react';
-import PropTypes from 'prop-types'; // Añadir esta importación
+import PropTypes from 'prop-types';
 import { render, screen } from '@testing-library/react';
 import EasyButton from '../sharedComponent/EasyButton';
 import { ThemeProvider } from '../sharedComponent/theme';
