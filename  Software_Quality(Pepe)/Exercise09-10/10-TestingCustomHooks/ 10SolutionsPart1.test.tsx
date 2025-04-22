@@ -34,3 +34,4 @@ describe('useCounter hook in component', () => {
     expect(screen.getByRole('heading').textContent).toContain('Count: 1');
   });
 });
+

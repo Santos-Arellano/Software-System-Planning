@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  bot:
+    build: .
+    volumes:
+      - bot_history:/app/history
+
+volumes:
+  bot_history:
