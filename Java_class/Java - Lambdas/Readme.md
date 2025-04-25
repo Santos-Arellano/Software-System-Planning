@@ -68,15 +68,15 @@ text
 
 Compila y ejecuta la clase `Main` para la versión básica o `ExtendedMain` para la versión con menú interactivo:
 
-javac *.java
-java Main
+- javac *.java
+- java Main
 
 text
 
 o
 
-javac *.java
-java ExtendedMain
+- javac *.java
+- java ExtendedMain
 
 text
 
