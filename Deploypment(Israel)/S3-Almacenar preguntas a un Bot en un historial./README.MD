@@ -62,3 +62,9 @@ docker run --rm -v bot_history:/app/history alpine cat /app/history/questions_hi
 - `Dockerfile`: Instrucciones para construir la imagen Docker
 - `docker-compose.yml`: Configuración de Docker Compose
 - `run_bot.sh`: Script de shell para ejecutar fácilmente el bot
+
+
+
+
+
+
