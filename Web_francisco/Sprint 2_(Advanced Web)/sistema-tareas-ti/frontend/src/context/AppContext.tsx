@@ -1,8 +1,8 @@
 // src/context/AppContext.tsx
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { Task } from '../models/Task';
-import { User } from '../models/User';
-import { getTasks, getUsers } from '../api/api';
+import { User, Role, Level } from '../models/User';
+import { getTasks, getUsers, checkBackendHealth } from '../api/api';
 import { connectWebSocket, disconnectWebSocket, subscribe } from '../websocket';
 
 interface AppContextType {
@@ -11,7 +11,7 @@ interface AppContextType {
     currentUser: User | null;
     setCurrentUser: (user: User | null) => void;
     loading: boolean;
-    refreshData: () => Promise<void>; // Añade esta propiedad
+    refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -34,6 +34,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const isBackendHealthy = await checkBackendHealth();
+        
+        if (!isBackendHealthy) {
+          // Agregar datos de ejemplo si el backend no está disponible
+          console.log('Backend no disponible, usando datos de ejemplo');
+          setUsers([{
+            id: 1,
+            name: 'Usuario Demo',
+            role: Role.PROGRAMADOR,
+            level: Level.SENIOR,
+            available: true,
+            isLeader: true,
+            taskCount: 0,
+            tasks: []
+          }]);
+          setCurrentUser({
+            id: 1,
+            name: 'Usuario Demo',
+            role: Role.PROGRAMADOR,
+            level: Level.SENIOR,
+            available: true,
+            isLeader: true,
+            taskCount: 0,
+            tasks: []
+          });
+          setLoading(false);
+          return;
+        }
+        
         const [usersData, tasksData] = await Promise.all([
           getUsers(),
           getTasks(),
@@ -42,7 +71,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setUsers(usersData);
         setTasks(tasksData);
         
-        // Set first user as default (can be changed later by user selection)
         if (usersData.length > 0) {
           setCurrentUser(usersData[0]);
         }
@@ -54,16 +82,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     fetchData();
-    connectWebSocket();
+    setupWebSocket();
+    
+    // Timeout para evitar carga infinita
+    const loadingTimeout = setTimeout(() => {
+      if (loading) {
+        console.log("Forzando finalización de carga después de timeout");
+        setLoading(false);
+        
+        // Si no hay usuarios después del timeout, crear uno temporal para demo
+        if (users.length === 0) {
+          const demoUser = {
+            id: 999,
+            name: 'Usuario Demo',
+            role: Role.PROGRAMADOR,
+            level: Level.SENIOR,
+            available: true,
+            isLeader: true,
+            taskCount: 0
+          };
+          setUsers([demoUser]);
+          setCurrentUser(demoUser);
+        }
+      }
+    }, 8000); // 8 segundos
+    
+    return () => clearTimeout(loadingTimeout);
+  }, [loading, users.length]);
 
-    // Setup WebSocket subscriptions
+  const setupWebSocket = async () => {
+    try {
+      if (await checkBackendHealth()) {
+        connectWebSocket();
+        setupSubscriptions();
+      }
+    } catch (e) {
+      console.error('Error setting up WebSocket:', e);
+    }
+  };
+
+  const setupSubscriptions = () => {
     const unsubscribeTasks = subscribe('tasks', (updatedTasks: Task[]) => {
       setTasks(updatedTasks);
     });
 
     const unsubscribeUsers = subscribe('users', (updatedUsers: User[]) => {
       setUsers(updatedUsers);
-      // Update current user if it exists in the updated list
       if (currentUser) {
         const updatedCurrentUser = updatedUsers.find(u => u.id === currentUser.id);
         if (updatedCurrentUser) {
@@ -71,15 +135,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
     });
-
+    
     return () => {
       unsubscribeTasks();
       unsubscribeUsers();
       disconnectWebSocket();
     };
-  }, []);
+  };
 
-  // If current user changes, update its data when users are updated
+  // Si currentUser cambia, actualizar sus datos cuando se actualicen los usuarios
   useEffect(() => {
     if (currentUser && users.length > 0) {
       const updatedUser = users.find(u => u.id === currentUser.id);

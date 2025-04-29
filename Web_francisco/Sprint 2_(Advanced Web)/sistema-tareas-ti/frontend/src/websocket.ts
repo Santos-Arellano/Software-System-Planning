@@ -3,6 +3,7 @@ import SockJS from 'sockjs-client';
 import { Client, over } from 'stompjs';
 import { WebSocketMessage } from './models/WebSocketMessage';
 import { Task } from './models/Task';
+import { checkBackendHealth } from './api/api';
 
 // WebSocket configuration
 let stompClient: Client | null = null;
@@ -38,10 +39,30 @@ const processPendingSubscriptions = () => {
 };
 
 /**
+ * Solicita datos iniciales al servidor
+ */
+export const requestInitialData = () => {
+  if (stompClient && stompClient.connected) {
+    console.log("Solicitando datos iniciales...");
+    stompClient.send("/app/requestInitialData", {}, JSON.stringify({}));
+  } else {
+    console.log("WebSocket no conectado, no se pueden solicitar datos iniciales");
+  }
+};
+
+/**
  * Establishes a WebSocket connection
  */
-export const connectWebSocket = () => {
+export const connectWebSocket = async () => {
   if ((stompClient && stompClient.connected) || connecting) {
+    return;
+  }
+  
+  // Verificar si el backend está disponible
+  const isBackendHealthy = await checkBackendHealth();
+  if (!isBackendHealthy) {
+    console.error('Backend no disponible. No se puede establecer conexión WebSocket.');
+    setTimeout(connectWebSocket, 5000);
     return;
   }
   
@@ -68,10 +89,15 @@ export const connectWebSocket = () => {
     
     stompClient.connect({}, 
       (frame) => {
-        console.log('WebSocket connected successfully');
+        console.log('WebSocket conectado exitosamente');
         connected = true;
         connecting = false;
         reconnectAttempts = 0; // Reset reconnect counter on successful connection
+        
+        // Solicitar datos iniciales después de conectarse
+        setTimeout(() => {
+          requestInitialData();
+        }, 500);
         
         setTimeout(() => {
           subscribeToTopics();

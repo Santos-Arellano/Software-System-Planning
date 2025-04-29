@@ -131,6 +131,7 @@ public class TaskService {
     private void notifyTaskChange() {
         List<TaskDTO> tasks = getAllTasksDto();
         messagingTemplate.convertAndSend("/topic/tasks", tasks);
+        System.out.println("Notificación de cambio de tareas enviada");
     }
     
     public TaskDTO convertToDTO(Task task) {

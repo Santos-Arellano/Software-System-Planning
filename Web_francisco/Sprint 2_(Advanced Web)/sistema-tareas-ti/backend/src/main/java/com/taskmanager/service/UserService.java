@@ -4,6 +4,7 @@ package com.taskmanager.service;
 import com.taskmanager.dto.UserDTO;
 import com.taskmanager.model.User;
 import com.taskmanager.repository.UserRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,10 +14,12 @@ import java.util.Optional;
 public class UserService {
     
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     
     // Constructor injection en lugar de field injection
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, SimpMessagingTemplate messagingTemplate) {
         this.userRepository = userRepository;
+        this.messagingTemplate = messagingTemplate;
     }
     
     public List<User> getAllUsers() {
@@ -34,11 +37,14 @@ public class UserService {
     }
     
     public User saveUser(User user) {
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        notifyUserChange();
+        return savedUser;
     }
     
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+        notifyUserChange();
     }
     
     public List<User> getAvailableUsers() {
@@ -63,5 +69,11 @@ public class UserService {
         dto.setLeader(user.isLeader());
         dto.setTaskCount(user.getTasks().size());
         return dto;
+    }
+    
+    private void notifyUserChange() {
+        List<UserDTO> users = getAllUsersDto();
+        messagingTemplate.convertAndSend("/topic/users", users);
+        System.out.println("Notificación de cambio de usuarios enviada");
     }
 }

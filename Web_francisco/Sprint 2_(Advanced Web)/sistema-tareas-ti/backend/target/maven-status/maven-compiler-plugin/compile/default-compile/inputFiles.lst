@@ -1,6 +1,8 @@
 /Users/santosa/Documents/GitHub/Software-System-Planning/Web_francisco/Sprint 2_(Advanced Web)/sistema-tareas-ti/backend/src/main/java/com/taskmanager/controller/AgentController.java
 /Users/santosa/Documents/GitHub/Software-System-Planning/Web_francisco/Sprint 2_(Advanced Web)/sistema-tareas-ti/backend/src/main/java/com/taskmanager/controller/WebSocketController.java
 /Users/santosa/Documents/GitHub/Software-System-Planning/Web_francisco/Sprint 2_(Advanced Web)/sistema-tareas-ti/backend/src/main/java/com/taskmanager/controller/UserController.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/Web_francisco/Sprint 2_(Advanced Web)/sistema-tareas-ti/backend/src/main/java/com/taskmanager/config/DataInitializer.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/Web_francisco/Sprint 2_(Advanced Web)/sistema-tareas-ti/backend/src/main/java/com/taskmanager/controller/HealthController.java
 /Users/santosa/Documents/GitHub/Software-System-Planning/Web_francisco/Sprint 2_(Advanced Web)/sistema-tareas-ti/backend/src/main/java/com/taskmanager/agent/TaskAssignmentAgent.java
 /Users/santosa/Documents/GitHub/Software-System-Planning/Web_francisco/Sprint 2_(Advanced Web)/sistema-tareas-ti/backend/src/main/java/com/taskmanager/dto/UserDTO.java
 /Users/santosa/Documents/GitHub/Software-System-Planning/Web_francisco/Sprint 2_(Advanced Web)/sistema-tareas-ti/backend/src/main/java/com/taskmanager/config/WebSocketConfig.java

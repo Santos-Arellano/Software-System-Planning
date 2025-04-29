@@ -87,8 +87,20 @@ export const getTasksByUserId = async (userId: number): Promise<Task[]> => {
   return response.data;
 };
 
+
 // Agent API
 export const runAgent = async (): Promise<string> => {
   const response = await api.post('/agent/run');
   return response.data;
+};
+
+// Añadir al final de api.ts
+export const checkBackendHealth = async (): Promise<boolean> => {
+  try {
+    const response = await api.get('/users', { timeout: 3000 });
+    return response.status === 200;
+  } catch (error) {
+    console.error('Backend no disponible:', error);
+    return false;
+  }
 };

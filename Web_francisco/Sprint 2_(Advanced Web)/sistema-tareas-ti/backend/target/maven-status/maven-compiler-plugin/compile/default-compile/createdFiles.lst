@@ -1,10 +1,12 @@
 com/taskmanager/config/WebSocketConfig.class
 com/taskmanager/controller/UserController.class
+com/taskmanager/config/DataInitializer.class
 com/taskmanager/dto/WebSocketMessageDTO.class
 com/taskmanager/dto/TaskAssignmentDTO.class
 com/taskmanager/model/Level.class
 com/taskmanager/agent/TaskAssignmentAgent.class
 com/taskmanager/controller/WebSocketController.class
+com/taskmanager/controller/HealthController.class
 com/taskmanager/controller/TaskController.class
 com/taskmanager/dto/TaskDTO.class
 com/taskmanager/model/Role.class
