@@ -14,10 +14,38 @@ const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_DELAY_BASE = 1000; // Start with 1 second delay
 const subscribers: { [key: string]: ((data: any) => void)[] } = {};
 const pendingMessages: { destination: string, message: any }[] = [];
-const pendingSubscriptions: { topic: string, callback: (data: any) => void }[] = []; // Cola de suscripciones pendientes
+const pendingSubscriptions: { topic: string, callback: (data: any) => void }[] = []; 
 const activeSubscriptionIds: Set<string> = new Set();
 const SOCKET_URL = 'http://localhost:8080/ws';
 
+// Global registry to manage WebSocket instances
+interface WebSocketRegistryEntry {
+  connection: WebSocket;
+  subscribers: number;
+}
+
+const globalWebSocketRegistry: Record<string, WebSocketRegistryEntry> = {};
+
+/**
+ * Get a shared WebSocket connection
+ */
+export const getWebSocketConnection = (url: string): WebSocket => {
+  if (!globalWebSocketRegistry[url]) {
+    const connection = new WebSocket(url);
+    globalWebSocketRegistry[url] = {
+      connection,
+      subscribers: 1
+    };
+    return connection;
+  } else {
+    globalWebSocketRegistry[url].subscribers++;
+    return globalWebSocketRegistry[url].connection;
+  }
+};
+
+/**
+ * Handle a subscription to a topic
+ */
 const handleSubscription = (topic: string, callback: (message: any) => void) => {
   if (stompClient) {
     stompClient.subscribe(topic, callback);
@@ -26,6 +54,9 @@ const handleSubscription = (topic: string, callback: (message: any) => void) => 
   }
 };
 
+/**
+ * Process any pending subscriptions
+ */
 const processPendingSubscriptions = () => {
   pendingSubscriptions.forEach(({ topic, callback }) => {
     if (!activeSubscriptionIds.has(`/topic/${topic}`) && stompClient) {
@@ -228,8 +259,6 @@ export const disconnectWebSocket = () => {
 
 /**
  * Sends a message to the specified destination
- * @param destination The destination to send the message to
- * @param message The message to send
  */
 export const sendMessage = (destination: string, message: any) => {
   if (stompClient && stompClient.connected) {
@@ -250,9 +279,6 @@ export const sendMessage = (destination: string, message: any) => {
 
 /**
  * Subscribes to a topic
- * @param topic The topic to subscribe to
- * @param callback The callback to call when a message is received
- * @returns A function to unsubscribe
  */
 export const subscribe = (topic: string, callback: (data: any) => void) => {
   if (!subscribers[topic]) {
@@ -278,8 +304,6 @@ export const subscribe = (topic: string, callback: (data: any) => void) => {
 
 /**
  * Notifies all subscribers of a topic
- * @param topic The topic to notify
- * @param data The data to send
  */
 const notifySubscribers = (topic: string, data: any) => {
   if (subscribers[topic]) {
