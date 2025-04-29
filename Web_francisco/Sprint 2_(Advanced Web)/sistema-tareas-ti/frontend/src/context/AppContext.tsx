@@ -23,12 +23,24 @@ const AppContext = createContext<AppContextType>({
   refreshData: async () => {},
 });
 
+// Función para parsear de manera segura
+const safeParse = (value: string | null) => {
+  try {
+    return value ? JSON.parse(value) : null;
+  } catch (error) {
+    console.error('Error parsing localStorage:', error);
+    return null;
+  }
+};
+
 export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    return safeParse(localStorage.getItem('user')); // Inicializa desde localStorage
+  });
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -82,44 +94,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     fetchData();
-    setupWebSocket();
     
-    // Timeout para evitar carga infinita
-    const loadingTimeout = setTimeout(() => {
-      if (loading) {
-        console.log("Forzando finalización de carga después de timeout");
-        setLoading(false);
-        
-        // Si no hay usuarios después del timeout, crear uno temporal para demo
-        if (users.length === 0) {
-          const demoUser = {
-            id: 999,
-            name: 'Usuario Demo',
-            role: Role.PROGRAMADOR,
-            level: Level.SENIOR,
-            available: true,
-            isLeader: true,
-            taskCount: 0
-          };
-          setUsers([demoUser]);
-          setCurrentUser(demoUser);
-        }
-      }
-    }, 8000); // 8 segundos
-    
-    return () => clearTimeout(loadingTimeout);
-  }, [loading, users.length]);
-
-  const setupWebSocket = async () => {
-    try {
+    // Modificación del efecto de WebSocket
+    const setupWS = async () => {
       if (await checkBackendHealth()) {
         connectWebSocket();
-        setupSubscriptions();
+        const cleanup = setupSubscriptions();
+        return () => {
+          cleanup();
+          disconnectWebSocket();
+        };
       }
-    } catch (e) {
-      console.error('Error setting up WebSocket:', e);
-    }
-  };
+    };
+
+    setupWS();
+    
+    return () => {
+      disconnectWebSocket();
+    };
+  }, []); // Elimina dependencias innecesarias
 
   const setupSubscriptions = () => {
     const unsubscribeTasks = subscribe('tasks', (updatedTasks: Task[]) => {

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import java.util.Collections;
 import java.util.List;
 
 @Configuration
@@ -30,8 +31,8 @@ public class DataInitializer {
             List<TaskDTO> tasks = taskService.getAllTasksDto();
             
             // Enviar datos iniciales a través de WebSocket
-            messagingTemplate.convertAndSend("/topic/users", users);
-            messagingTemplate.convertAndSend("/topic/tasks", tasks);
+            messagingTemplate.convertAndSend("/topic/users", users != null ? users : Collections.emptyList());
+            messagingTemplate.convertAndSend("/topic/tasks", tasks != null ? tasks : Collections.emptyList());
             
             System.out.println("Datos iniciales enviados a través de WebSocket");
         };

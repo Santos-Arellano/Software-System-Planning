@@ -1,7 +1,8 @@
 // src/components/UserCard.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, Typography, Box, Chip, Avatar } from '@mui/material';
 import { User, Level } from '../models/User';
+import { getUsers } from '../api/api'; // Asegúrate de importar la función getUsers
 
 interface UserCardProps {
   user: User;
@@ -10,6 +11,21 @@ interface UserCardProps {
 }
 
 const UserCard: React.FC<UserCardProps> = ({ user, selected, onClick }) => {
+  // Agregar useEffect para actualizar el estado de los usuarios
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const users = await getUsers();
+        // Aquí deberías tener un método para actualizar el estado de los usuarios en el contexto o en el componente padre
+        // setUsers(users); // Descomentar y usar el método adecuado para actualizar el estado
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+    
+    fetchUsers();
+  }, []); // Dependencias vacías para que se ejecute solo al montar el componente
+
   return (
     <Card 
       variant={selected ? "elevation" : "outlined"}

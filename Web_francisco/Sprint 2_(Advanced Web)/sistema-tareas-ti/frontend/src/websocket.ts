@@ -18,6 +18,9 @@ const pendingSubscriptions: { topic: string, callback: (data: any) => void }[] =
 const activeSubscriptionIds: Set<string> = new Set();
 const SOCKET_URL = 'http://localhost:8080/ws';
 
+// Registro de suscripciones activas
+const activeSubscriptions: { [topic: string]: any } = {};
+
 // Global registry to manage WebSocket instances
 interface WebSocketRegistryEntry {
   connection: WebSocket;
@@ -47,10 +50,13 @@ export const getWebSocketConnection = (url: string): WebSocket => {
  * Handle a subscription to a topic
  */
 const handleSubscription = (topic: string, callback: (message: any) => void) => {
-  if (stompClient) {
-    stompClient.subscribe(topic, callback);
+  if (stompClient && !activeSubscriptions[topic]) {
+    activeSubscriptions[topic] = stompClient.subscribe(topic, (message) => {
+      const data = JSON.parse(message.body);
+      callback(data);
+    });
     activeSubscriptionIds.add(topic);
-    console.log(`Successfully subscribed to ${topic}`);
+    console.log(`Subscribed to ${topic}`);
   }
 };
 
@@ -85,21 +91,17 @@ export const requestInitialData = () => {
  * Establishes a WebSocket connection
  */
 export const connectWebSocket = async () => {
-  if ((stompClient && stompClient.connected) || connecting) {
-    return;
-  }
-  
-  // Verificar si el backend está disponible
-  const isBackendHealthy = await checkBackendHealth();
-  if (!isBackendHealthy) {
-    console.error('Backend no disponible. No se puede establecer conexión WebSocket.');
-    setTimeout(connectWebSocket, 5000);
-    return;
-  }
-  
-  connecting = true;
-  
+  if (connected || connecting) return;
+
   try {
+    const isBackendHealthy = await checkBackendHealth();
+    if (!isBackendHealthy) {
+      console.error('Backend no disponible');
+      throw new Error('Backend offline');
+    }
+    
+    connecting = true;
+    
     const socket = new SockJS(SOCKET_URL);
     stompClient = over(socket);
     stompClient.debug = () => {}; // Disable debug logs
@@ -110,6 +112,7 @@ export const connectWebSocket = async () => {
         connected = false;
         connecting = false;
         activeSubscriptionIds.clear();
+        stompClient = null; // Limpiar la referencia del cliente
         setTimeout(connectWebSocket, 5000);
       };
       
@@ -156,16 +159,20 @@ export const connectWebSocket = async () => {
         }
       }
     );
-  } catch (err) {
-    console.error('Error initializing WebSocket:', err);
-    connected = false;
-    connecting = false;
-    setTimeout(connectWebSocket, 5000);
+  } catch (error) {
+    console.error('Error de conexión:', error);
+    // Notificar al contexto de la aplicación
+    notifySubscribers('connection-status', { connected: false });
   }
 };
 
 // Definir manejadores separados
 const handleTasksMessage = (message: any) => {
+  if (!message.body || typeof message.body !== 'string') {
+    console.error('Mensaje WebSocket inválido (sin body):', message);
+    return;
+  }
+  
   try {
     const tasks: Task[] = JSON.parse(message.body);
     notifySubscribers('tasks', tasks);
@@ -175,6 +182,11 @@ const handleTasksMessage = (message: any) => {
 };
 
 const handleUsersMessage = (message: any) => {
+  if (!message.body || typeof message.body !== 'string') {
+    console.error('Mensaje WebSocket inválido (sin body):', message);
+    return;
+  }
+  
   try {
     const users = JSON.parse(message.body);
     notifySubscribers('users', users);
@@ -184,6 +196,11 @@ const handleUsersMessage = (message: any) => {
 };
 
 const handleMessagesMessage = (message: any) => {
+  if (!message.body || typeof message.body !== 'string') {
+    console.error('Mensaje WebSocket inválido (sin body):', message);
+    return;
+  }
+  
   try {
     const webSocketMessage: WebSocketMessage = JSON.parse(message.body);
     notifySubscribers('messages', webSocketMessage);
@@ -193,31 +210,40 @@ const handleMessagesMessage = (message: any) => {
 };
 
 /**
+ * Nueva función para manejar suscripciones
+ */
+const manageSubscription = (topic: string, handler: (message: any) => void) => {
+  if (!stompClient || activeSubscriptions[topic]) return;
+
+  activeSubscriptions[topic] = stompClient.subscribe(topic, (message) => {
+    if (!message.body) {
+      console.error(`Mensaje vacío en topic ${topic}`);
+      return;
+    }
+    handler(message);
+  });
+  
+  console.log(`Subscribed to ${topic}`);
+};
+
+/**
  * Subscribe to topics based on registered subscribers
  */
 const subscribeToTopics = () => {
-  if (!stompClient || !stompClient.connected) {
-    console.log('Deferring subscriptions until connection is established');
-    return;
-  }
-  
-  try {
-    if (subscribers['tasks'] && subscribers['tasks'].length > 0 && !activeSubscriptionIds.has('/topic/tasks')) {
-      handleSubscription('/topic/tasks', handleTasksMessage);
+  if (!stompClient?.connected) return;
+
+  Object.entries(subscribers).forEach(([topic, callbacks]) => {
+    if (callbacks.length > 0 && !activeSubscriptions[topic]) {
+      switch(topic) {
+        case 'tasks':
+          manageSubscription('/topic/tasks', handleTasksMessage);
+          break;
+        case 'users':
+          manageSubscription('/topic/users', handleUsersMessage);
+          break;
+      }
     }
-    
-    if (subscribers['users'] && subscribers['users'].length > 0 && !activeSubscriptionIds.has('/topic/users')) {
-      handleSubscription('/topic/users', handleUsersMessage);
-    }
-    
-    if (subscribers['messages'] && subscribers['messages'].length > 0 && !activeSubscriptionIds.has('/topic/messages')) {
-      handleSubscription('/topic/messages', handleMessagesMessage);
-    }
-  } catch (error) {
-    console.error('Error subscribing to topics:', error);
-    disconnectWebSocket();
-    setTimeout(connectWebSocket, 1000);
-  }
+  });
 };
 
 /**
@@ -238,7 +264,11 @@ const processPendingMessages = () => {
 export const disconnectWebSocket = () => {
   if (stompClient) {
     try {
-      activeSubscriptionIds.clear();
+      // Limpiar las suscripciones activas
+      Object.keys(activeSubscriptions).forEach(topic => {
+        activeSubscriptions[topic].unsubscribe();
+        delete activeSubscriptions[topic];
+      });
       
       if (stompClient.connected) {
         stompClient.disconnect(() => {
