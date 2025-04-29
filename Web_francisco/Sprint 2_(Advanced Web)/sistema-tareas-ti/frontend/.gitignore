@@ -55,3 +55,4 @@ out
 
 # Cache files
 .cache/
+node_modules/
