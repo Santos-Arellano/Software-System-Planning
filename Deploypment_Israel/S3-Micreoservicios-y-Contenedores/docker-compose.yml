@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  triangle-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.triangle
+    ports:
+      - "5001:5001"
+    networks:
+      - geometry-network
+
+  square-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.square
+    ports:
+      - "5002:5002"
+    networks:
+      - geometry-network
+
+  circle-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.circle
+    ports:
+      - "5003:5003"
+    networks:
+      - geometry-network
+
+networks:
+  geometry-network:
+    driver: bridge
