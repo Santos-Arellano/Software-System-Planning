@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  suma:
+    build: ./suma
+    ports:
+      - "8001:8000"
+    networks:
+      - shape-net
+
+  resta:
+    build: ./resta
+    ports:
+      - "8002:8000"
+    networks:
+      - shape-net
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ecuaciones
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db_service/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - shape-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  db_service:
+    build: ./db_service
+    ports:
+      - "8004:8000"
+    networks:
+      - shape-net
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: ecuaciones
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  ecuacion:
+    build: ./ecuacion
+    ports:
+      - "8003:8000"
+    networks:
+      - shape-net
+    depends_on:
+      - suma
+      - resta
+      - db_service
+
+networks:
+  shape-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
