@@ -1,0 +1,32 @@
+.App {
+    text-align: center;
+  }
+  
+  .navbar {
+    padding: 1rem;
+    background-color: #282c34;
+    color: white;
+  }
+  
+  .container {
+    margin-top: 2rem;
+  }
+  
+  .table {
+    margin-top: 2rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-action {
+    margin-right: 5px;
+  }
+  
+  .add-button {
+    margin-bottom: 1rem;
+    float: right;
+  }
+  
+  .modal-header {
+    background-color: #282c34;
+    color: white;
+  }

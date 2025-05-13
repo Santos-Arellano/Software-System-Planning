@@ -1,0 +1,49 @@
+# Carpetas de compilación de Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Carpetas de compilación de Gradle
+build/
+.gradle/
+
+# Archivos de configuración de IDEs
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# Logs y archivos temporales
+logs/
+*.log
+*.tmp
+
+# Archivos específicos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de entorno y secretos
+.env
+application-dev.properties
+application-local.properties
+application-prod.properties
+application-dev.yml
+application-local.yml
+application-prod.yml
+/src/main/resources/firebase-config.json
+
+# Archivos de Maven
+mvnw
+mvnw.cmd
+.mvn/
+HELP.md
+
+# Archivos binarios compilados
+*.jar
+*.war
+*.ear
+*.class
