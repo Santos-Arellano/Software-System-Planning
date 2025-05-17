@@ -1,0 +1,69 @@
+{
+    "realm": "hospital",
+    "enabled": true,
+    "clients": [
+        {
+            "clientId": "hospital-client",
+            "secret": "hospital-client-secret",
+            "enabled": true,
+            "publicClient": false,
+            "protocol": "openid-connect",
+            "redirectUris": ["*"],
+            "standardFlowEnabled": true
+        }
+    ],
+    "roles": {
+        "realm": [
+            {
+                "name": "admin",
+                "description": "Administrator role"
+            },
+            {
+                "name": "patient",
+                "description": "Patient role"
+            },
+            {
+                "name": "doctor",
+                "description": "Doctor role" 
+            }
+        ]
+    },
+    "users": [
+        {
+            "username": "admin",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "admin",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": ["admin"]
+        },
+        {
+            "username": "patient",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "patient",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": ["patient"]
+        },
+        {
+            "username": "doctor",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "doctor",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": ["doctor"]
+        }
+    ]
+}

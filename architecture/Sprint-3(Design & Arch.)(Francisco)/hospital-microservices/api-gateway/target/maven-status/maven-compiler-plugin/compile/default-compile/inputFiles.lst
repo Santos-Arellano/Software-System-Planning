@@ -1,0 +1,5 @@
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Sprint-3(Design & Arch.)(Francisco)/hospital-microservices/api-gateway/src/main/java/com/xai/apigateway/config/SecurityConfig.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Sprint-3(Design & Arch.)(Francisco)/hospital-microservices/api-gateway/src/main/java/com/xai/apigateway/security/JwtAuthenticationToken.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Sprint-3(Design & Arch.)(Francisco)/hospital-microservices/api-gateway/src/main/java/com/xai/apigateway/filter/JwtAuthenticationFilter.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Sprint-3(Design & Arch.)(Francisco)/hospital-microservices/api-gateway/src/main/java/com/xai/apigateway/ApiGatewayApplication.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Sprint-3(Design & Arch.)(Francisco)/hospital-microservices/api-gateway/src/main/java/com/xai/apigateway/util/JwtUtil.java

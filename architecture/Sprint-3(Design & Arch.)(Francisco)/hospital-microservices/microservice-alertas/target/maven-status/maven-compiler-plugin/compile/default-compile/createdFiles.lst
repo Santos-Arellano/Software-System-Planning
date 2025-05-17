@@ -1,0 +1,7 @@
+com/xai/alertas/service/AlertaService.class
+com/xai/alertas/model/Alerta.class
+com/xai/alertas/util/JwtUtil.class
+com/xai/alertas/config/KafkaConsumerConfig.class
+com/xai/pacientes/controller/HealthController.class
+com/xai/alertas/controller/AlertaController.class
+com/xai/alertas/AlertasApplication.class

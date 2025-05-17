@@ -1,0 +1,50 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+server:
+  port: 8084
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/hospital
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: pacientes
+          uri: lb://microservice-pacientes
+          predicates:
+            - Path=/api/pacientes/**
+        - id: citas
+          uri: lb://microservice-citas
+          predicates:
+            - Path=/api/citas/**
+        - id: alertas
+          uri: lb://microservice-alertas
+          predicates:
+            - Path=/api/alertas/**
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/hospital
+          jwk-set-uri: http://keycloak:8080/realms/hospital/protocol/openid-connect/certs
+
+logging:
+  level:
+    org:
+      springframework: DEBUG
+      hibernate: DEBUG

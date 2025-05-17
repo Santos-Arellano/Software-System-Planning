@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.xai.citas;
+
+message Cita {
+  int64 id = 1;
+  string paciente = 2;
+  string doctor = 3;
+  string fecha = 4;
+}

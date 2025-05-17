@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package com.xai.pacientes;
+
+message Paciente {
+  int64 id = 1;
+  string nombre = 2;
+  string rol = 3;
+}

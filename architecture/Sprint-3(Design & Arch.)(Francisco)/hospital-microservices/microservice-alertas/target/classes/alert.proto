@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package com.xai.alertas;
+
+message Alerta {
+  int64 id = 1;
+  string mensaje = 2;
+  string destinatario = 3;
+}

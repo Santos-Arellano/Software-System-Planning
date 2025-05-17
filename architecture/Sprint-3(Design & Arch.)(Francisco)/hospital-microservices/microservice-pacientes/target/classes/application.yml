@@ -1,0 +1,27 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/hospital
+    driver-class-name: org.postgresql.Driver
+    username: admin
+    password: admin
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/hospital
+          jwk-set-uri: http://keycloak:8080/realms/hospital/protocol/openid-connect/certs
+logging:
+  level:
+    org:
+      springframework: DEBUG
+      hibernate: DEBUG
