@@ -1,0 +1,109 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\geometry{a4paper, margin=1in}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+\title{Sistema Hospitalario Basado en Microservicios - Informe Sprint 3}
+\author{Equipo \#21 \\ Santos Alejandro Arellano Olarte // A01643742 \\ Roberto Anwar Teigeiro Aguilar // A01643651 \\ Fernando Antonio Lopez Garcia // A01643685 \\ Diego Michell Villa Duran // A00836723 \\ Sadrac Aramburo Enciso // A01643639}
+\date{16 de Mayo de 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Introducción}
+Este informe documenta la implementación de un sistema hospitalario basado en microservicios para el Sprint 3, que incluye la gestión de pacientes, agendamiento de citas y alertas médicas, asegurado con JWT (JSON Web Tokens) y utilizando Kafka para la comunicación asincrónica. El sistema está diseñado para ser escalable, seguro y eficiente, cumpliendo con los requisitos establecidos en la actividad.
+
+\section{Arquitectura del Sistema}
+El sistema está desplegado en un entorno de Docker, utilizando un enfoque de microservicios. La arquitectura se representa en el siguiente diagrama de despliegue UML:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{architecture.png}
+    \caption{Diagrama de Despliegue UML}
+\end{figure}
+
+\section{Decisiones Técnicas}
+A continuación, se detallan las decisiones técnicas tomadas durante la implementación del sistema:
+
+\begin{itemize}
+    \item \textbf{Microservicios}: Se implementaron tres microservicios: \textit{Pacientes} para la gestión de pacientes (interno y seguro), \textit{Citas} para el agendamiento de citas (uso público limitado) y \textit{Alertas} para procesar alertas médicas basadas en eventos (reactivo). Cada microservicio utiliza Spring Boot para crear APIs REST que manejan datos en formato JSON.
+    \item \textbf{Seguridad}: Se utilizó Keycloak como proveedor de identidad para la autenticación basada en JWT. Cada microservicio valida los tokens JWT proporcionados por Keycloak, asegurando que solo usuarios autorizados accedan a los endpoints. Se definieron roles diferenciados (admin, paciente, médico) para controlar el acceso.
+    \item \textbf{Comunicación}: Se emplearon APIs REST para la comunicación sincrónica entre el API Gateway y los microservicios. Para la comunicación asincrónica, se utilizó Kafka para manejar eventos como actualizaciones de pacientes que disparan alertas en el microservicio Alertas. El API Gateway facilita el acceso externo y rutea las solicitudes a los microservicios correspondientes.
+    \item \textbf{Base de Datos}: Se utilizó PostgreSQL para almacenar los datos de pacientes y citas. Cada microservicio tiene su propio esquema en la base de datos para mantener la separación de preocupaciones.
+    \item \textbf{Despliegue}: El sistema se despliega utilizando Docker Compose, lo que permite un manejo sencillo de contenedores y servicios. Se utilizan volúmenes para persistir datos críticos como la base de datos y los metadatos de Kafka.
+\end{itemize}
+
+\section{Resultados de Pruebas}
+Se realizaron pruebas exhaustivas para verificar la funcionalidad del sistema, especialmente en lo que respecta a la seguridad con JWT y la comunicación entre componentes. A continuación, se presentan los resultados:
+
+\begin{enumerate}
+    \item \textbf{Verificación de Salud de los Servicios}: Se verificaron los endpoints de salud de cada microservicio y el API Gateway para confirmar que estaban operativos.
+        \begin{itemize}
+            \item \texttt{curl http://localhost:8081/actuator/health} - Respuesta: \texttt{\{"status":"UP"\}}
+            \item \texttt{curl http://localhost:8082/actuator/health} - Respuesta: \texttt{\{"status":"UP"\}}
+            \item \texttt{curl http://localhost:8083/actuator/health} - Respuesta: \texttt{\{"status":"UP"\}}
+            \item \texttt{curl http://localhost:8084/actuator/health} - Respuesta: \texttt{\{"status":"UP"\}}
+        \end{itemize}
+
+    \item \textbf{Autenticación con JWT}: Se obtuvo un token JWT utilizando las credenciales de administrador y se probaron accesos a endpoints protegidos.
+        \begin{itemize}
+            \item Obtener token:
+                \begin{verbatim}
+                curl -X POST http://localhost:8080/realms/hospital/protocol/openid-connect/token \
+                -d "client_id=hospital-client" \
+                -d "client_secret=hospital-client-secret" \
+                -d "username=admin" \
+                -d "password=admin" \
+                -d "grant_type=password"
+                \end{verbatim}
+                Respuesta: Contiene \texttt{access_token}.
+
+            \item Acceso a endpoint protegido con token:
+                \begin{verbatim}
+                curl -H "Authorization: Bearer <access_token>" http://localhost:8084/api/pacientes
+                \end{verbatim}
+                Respuesta: Lista JSON de pacientes, e.g., \texttt{[{"id":1,"nombre":"Test Patient"}]}
+
+            \item Acceso a endpoint protegido sin token:
+                \begin{verbatim}
+                curl http://localhost:8084/api/pacientes
+                \end{verbatim}
+                Respuesta: \texttt{401 Unauthorized}.
+        \end{itemize}
+
+    \item \textbf{Comunicación con Kafka}: Se envió un mensaje a través de Kafka para simular una actualización de paciente y se verificó que el microservicio Alertas lo procesara.
+        \begin{itemize}
+            \item Producir mensaje:
+                \begin{verbatim}
+                docker exec -it hospital-microservices-kafka-1 kafka-console-producer \
+                --broker-list kafka:29092 --topic pacientes-topic
+                # Mensaje: {"id":1,"nombre":"Test Patient","status":"updated"}
+                \end{verbatim}
+
+            \item Verificar logs de Alertas:
+                \begin{verbatim}
+                docker compose logs -f alertas
+                \end{verbatim}
+                Respuesta: Logs indicando que la alerta fue procesada, e.g., \texttt{Received patient update: Test Patient}.
+        \end{itemize}
+\end{enumerate}
+
+\section{Conclusión}
+El sistema hospitalario basado en microservicios se implementó con éxito, cumpliendo los requisitos mínimos de tener al menos dos microservicios funcionales (Pacientes y Citas), con funcionalidad parcial para Alertas debido a problemas iniciales con la configuración de Kafka y Keycloak. Se resolvieron errores relacionados con el ID de clúster de Kafka y la conexión de Keycloak con PostgreSQL. Las pruebas confirman que el sistema es funcional y seguro, con JWT asegurando el acceso autorizado a los endpoints. Futuras mejoras incluyen la implementación de pruebas unitarias más exhaustivas, optimización para entornos de producción y resolución de problemas residuales con el microservicio Alertas.
+
+\section{Referencias}
+\begin{itemize}
+    \item Repositorio GitHub: \url{https://github.com/Santos-Arellano/Software-System-Planning}
+    \item Video de Demostración: \url{https://youtu.be/aZjE647RC1s}
+\end{itemize}
+
+\end{document}
