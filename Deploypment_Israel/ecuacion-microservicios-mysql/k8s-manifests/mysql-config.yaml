@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: microservicios
+data:
+  MYSQL_HOST: "mysql"
+  MYSQL_USER: "myuser"
+  MYSQL_PASSWORD: "mypassword123"
+  MYSQL_DATABASE: "resultados_db"
