@@ -1,0 +1,7 @@
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Practica-Kafka(M5_Francisco)/kafka-messaging-system/src/main/java/com/kafka/model/Message.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Practica-Kafka(M5_Francisco)/kafka-messaging-system/src/main/java/com/kafka/config/KafkaConfig.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Practica-Kafka(M5_Francisco)/kafka-messaging-system/src/main/java/KafkaMessagingSystemApplication.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Practica-Kafka(M5_Francisco)/kafka-messaging-system/src/main/java/com/kafka/controller/MessageController.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Practica-Kafka(M5_Francisco)/kafka-messaging-system/src/main/java/com/kafka/service/ConsumerService.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Practica-Kafka(M5_Francisco)/kafka-messaging-system/src/main/java/com/kafka/service/ProducerService.java
+/Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Practica-Kafka(M5_Francisco)/kafka-messaging-system/src/main/java/com/kafka/config/WebSocketConfig.java

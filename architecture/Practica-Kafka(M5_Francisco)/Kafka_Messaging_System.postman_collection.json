@@ -1,0 +1,184 @@
+{
+    "info": {
+      "name": "Kafka Messaging System",
+      "description": "Colección para probar el sistema de mensajería con Kafka",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Health Check",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "http://localhost:8081/api/messages/health",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8081",
+            "path": ["api", "messages", "health"]
+          }
+        }
+      },
+      {
+        "name": "Enviar mensaje a topico1",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\"message\": \"Este es un mensaje para topico1 desde Postman\"}"
+          },
+          "url": {
+            "raw": "http://localhost:8081/api/messages/send",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8081",
+            "path": ["api", "messages", "send"]
+          }
+        }
+      },
+      {
+        "name": "Enviar mensaje a topico2",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\"message\": \"Mensaje de prueba para topico2 con datos importantes\"}"
+          },
+          "url": {
+            "raw": "http://localhost:8081/api/messages/send",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8081",
+            "path": ["api", "messages", "send"]
+          }
+        }
+      },
+      {
+        "name": "Enviar mensaje a topico3",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\"message\": \"Prueba de envío hacia topico3 con información específica\"}"
+          },
+          "url": {
+            "raw": "http://localhost:8081/api/messages/send",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8081",
+            "path": ["api", "messages", "send"]
+          }
+        }
+      },
+      {
+        "name": "Mensaje sin tópico específico (Error)",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\"message\": \"Este mensaje no contiene ningún tópico válido\"}"
+          },
+          "url": {
+            "raw": "http://localhost:8081/api/messages/send",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8081",
+            "path": ["api", "messages", "send"]
+          }
+        }
+      },
+      {
+        "name": "Enviar mensaje a topico1 (texto plano)",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "Este es un mensaje para topico1 desde Postman"
+          },
+          "url": {
+            "raw": "http://localhost:8081/api/messages/send-text",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8081",
+            "path": ["api", "messages", "send-text"]
+          }
+        }
+      },
+      {
+        "name": "Enviar mensaje a topico2 (texto plano)",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "Mensaje de prueba para topico2 con datos importantes"
+          },
+          "url": {
+            "raw": "http://localhost:8081/api/messages/send-text",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8081",
+            "path": ["api", "messages", "send-text"]
+          }
+        }
+      },
+      {
+        "name": "Enviar mensaje a topico3 (texto plano)",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "Prueba de envío hacia topico3 con información específica"
+          },
+          "url": {
+            "raw": "http://localhost:8081/api/messages/send-text",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8081",
+            "path": ["api", "messages", "send-text"]
+          }
+        }
+      }
+    ]
+  }
