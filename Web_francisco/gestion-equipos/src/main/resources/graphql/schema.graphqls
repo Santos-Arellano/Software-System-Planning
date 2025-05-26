@@ -1,0 +1,60 @@
+scalar Date
+
+type EquipoDeTrabajo {
+    id: ID!
+    nombre: String!
+    proyecto: String!
+    lider: String!
+    fechaCreacion: Date!
+    descripcion: String
+    trabajadores: [Trabajador!]!
+}
+
+type Trabajador {
+    id: ID!
+    nombre: String!
+    apellido: String!
+    rol: String!
+    email: String!
+    equipo: EquipoDeTrabajo!
+}
+
+input EquipoInput {
+    nombre: String!
+    proyecto: String!
+    lider: String!
+    fechaCreacion: Date!
+    descripcion: String
+}
+
+input TrabajadorInput {
+    nombre: String!
+    apellido: String!
+    rol: String!
+    email: String!
+    equipoId: ID!
+}
+
+type Query {
+    # Consultas para equipos
+    equipos: [EquipoDeTrabajo!]!
+    equipo(id: ID!): EquipoDeTrabajo
+    
+    # Consultas para trabajadores
+    trabajadores: [Trabajador!]!
+    trabajador(id: ID!): Trabajador
+    trabajadoresPorEquipo(equipoId: ID!): [Trabajador!]!
+}
+
+type Mutation {
+    # Mutaciones para equipos
+    crearEquipo(input: EquipoInput!): EquipoDeTrabajo!
+    actualizarEquipo(id: ID!, input: EquipoInput!): EquipoDeTrabajo!
+    eliminarEquipo(id: ID!): Boolean!
+    
+    # Mutaciones para trabajadores
+    crearTrabajador(input: TrabajadorInput!): Trabajador!
+    actualizarTrabajador(id: ID!, input: TrabajadorInput!): Trabajador!
+    eliminarTrabajador(id: ID!): Boolean!
+}
+
