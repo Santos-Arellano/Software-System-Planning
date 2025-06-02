@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background-color: #f0f8ff;
+        }
+        .container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input, button { 
+            padding: 12px; 
+            margin: 8px; 
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result { 
+            margin-top: 20px; 
+            padding: 20px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .error { 
+            color: red; 
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ Weather Search</h1>
+        <input type="text" id="cityInput" placeholder="Enter city name (e.g., Paris)">
+        <button onclick="searchWeather()">Search Weather</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function searchWeather() {
+            const city = document.getElementById('cityInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!city) {
+                resultDiv.innerHTML = '<div class="error">Please enter a city name</div>';
+                return;
+            }
+
+            try {
+                resultDiv.innerHTML = '🔄 Loading weather data...';
+                const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h3>🌍 Weather in ${data.city}</h3>
+                        <p>🌡️ <strong>Temperature:</strong> ${data.temperature}°C</p>
+                        <p>☀️ <strong>Condition:</strong> ${data.condition}</p>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error loading weather data: ${error.message}</div>`;
+            }
+        }
+
+        // Allow pressing Enter to search
+        document.getElementById('cityInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchWeather();
+            }
+        });
+    </script>
+</body>
+</html>

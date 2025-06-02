@@ -1,0 +1,26 @@
+[
+    {
+      "name": "Harry Potter",
+      "house": "Gryffindor",
+      "species": "Human",
+      "ancestry": "half-blood"
+    },
+    {
+      "name": "Hermione Granger",
+      "house": "Gryffindor",
+      "species": "Human",
+      "ancestry": "muggleborn"
+    },
+    {
+      "name": "Ron Weasley",
+      "house": "Gryffindor",
+      "species": "Human",
+      "ancestry": "pure-blood"
+    },
+    {
+      "name": "Santos",
+      "house": "Ravenclaw",
+      "species": "Human",
+      "ancestry": "muggle-born"
+    }
+  ]

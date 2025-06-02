@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harry Potter Characters</title>
+    <style>
+        body { 
+            font-family: 'Georgia', serif; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .character { 
+            border: 2px solid #34495e; 
+            margin: 15px 0; 
+            padding: 20px; 
+            border-radius: 10px; 
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .character:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .character h3 { 
+            margin-top: 0; 
+            color: #2c3e50; 
+            font-size: 1.4em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        .house { 
+            font-weight: bold; 
+            font-size: 1.1em;
+            padding: 5px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .house.gryffindor { background-color: #ff6b6b; color: white; }
+        .house.slytherin { background-color: #51cf66; color: white; }
+        .house.ravenclaw { background-color: #4dabf7; color: white; }
+        .house.hufflepuff { background-color: #ffd43b; color: #333; }
+        .house.unknown { background-color: #6c757d; color: white; }
+        
+        button { 
+            padding: 15px 30px; 
+            margin: 20px auto; 
+            background: linear-gradient(45deg, #3498db, #2980b9); 
+            color: white; 
+            border: none; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-size: 16px;
+            font-weight: bold;
+            display: block;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        button:hover {
+            background: linear-gradient(45deg, #2980b9, #1f5f8b);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            color: #7f8c8d;
+            padding: 40px;
+        }
+        .error {
+            color: #e74c3c;
+            background-color: #fdf2f2;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Harry Potter Characters ⚡</h1>
+        <button onclick="loadCharacters()">🧙‍♂️ Load Characters</button>
+        <div id="characters"></div>
+    </div>
+
+    <script>
+        async function loadCharacters() {
+            const charactersDiv = document.getElementById('characters');
+            
+            try {
+                charactersDiv.innerHTML = '<div class="loading">🔮 Loading magical characters...</div>';
+                const response = await fetch('/api/characters');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const characters = await response.json();
+                
+                charactersDiv.innerHTML = '';
+                
+                if (characters.length === 0) {
+                    charactersDiv.innerHTML = '<div class="error">No characters found!</div>';
+                    return;
+                }
+                
+                characters.forEach(character => {
+                    const div = document.createElement('div');
+                    div.className = 'character';
+                    
+                    const houseName = (character.house || 'Unknown').toLowerCase();
+                    const houseClass = ['gryffindor', 'slytherin', 'ravenclaw', 'hufflepuff'].includes(houseName) 
+                        ? houseName : 'unknown';
+                    
+                    div.innerHTML = `
+                        <h3>👤 ${character.name}</h3>
+                        <p class="house ${houseClass}">🏰 House: ${character.house || 'Unknown'}</p>
+                        <p><strong>🐾 Species:</strong> ${character.species || 'Human'}</p>
+                        <p><strong>📜 Ancestry:</strong> ${character.ancestry || 'Unknown'}</p>
+                        ${character.patronus ? `<p><strong>✨ Patronus:</strong> ${character.patronus}</p>` : ''}
+                    `;
+                    charactersDiv.appendChild(div);
+                });
+            } catch (error) {
+                charactersDiv.innerHTML = `<div class="error">❌ Error loading characters: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
