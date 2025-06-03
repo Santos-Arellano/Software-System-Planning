@@ -1,9 +1,10 @@
+-- init.sql
 -- Crear base de datos si no existe
 CREATE DATABASE IF NOT EXISTS resultados_db;
-CREATE USER 'myuser'@'%' IDENTIFIED BY 'mypassword123';
+-- Crear usuario si no existe
+CREATE USER IF NOT EXISTS 'myuser'@'%' IDENTIFIED BY 'mypassword123';
 GRANT ALL PRIVILEGES ON resultados_db.* TO 'myuser'@'%';
 FLUSH PRIVILEGES;
-
 
 -- Usar esa base de datos
 USE resultados_db;
