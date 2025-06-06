@@ -23,10 +23,11 @@ test.describe('Weather App API Mocking', () => {
       }
     });
 
-    await page.goto('http://127.0.0.1:5500/html-files/weather.html');
+    // Usar la URL correcta del Live Server
+    await page.goto('http://127.0.0.1:5500/Software_QualityPepe/Playwright_API_Mocking/html-files/weather.html');
     
     // Usar selectores más específicos
-    await expect(page.locator('#cityInput')).toBeVisible();
+    await expect(page.locator('#cityInput')).toBeVisible({ timeout: 10000 });
     await page.fill('#cityInput', 'Paris');
     await page.click('button:has-text("Search Weather")');
 
@@ -46,7 +47,8 @@ test.describe('Weather App API Mocking', () => {
       });
     });
 
-    await page.goto('http://127.0.0.1:5500/html-files/weather.html');
+    // Usar la URL correcta del Live Server
+    await page.goto('http://127.0.0.1:5500/Software_QualityPepe/Playwright_API_Mocking/html-files/weather.html');
     
     await page.fill('#cityInput', 'London');
     await page.click('button:has-text("Search Weather")');
@@ -55,9 +57,10 @@ test.describe('Weather App API Mocking', () => {
   });
 
   test('should handle empty city input gracefully', async ({ page }) => {
-    await page.goto('http://127.0.0.1:5500/html-files/weather.html');
+    // Usar la URL correcta del Live Server
+    await page.goto('http://127.0.0.1:5500/Software_QualityPepe/Playwright_API_Mocking/html-files/weather.html');
     
     await page.click('button:has-text("Search Weather")');
-    await expect(page.locator('#result')).toContainText('Please enter a city name');
+    await expect(page.locator('#result')).toContainText('Please enter a city name', { timeout: 10000 });
   });
 });

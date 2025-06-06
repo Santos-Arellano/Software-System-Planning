@@ -33,3 +33,6 @@ coverage/
 dist/
 build/
 out/
+
+
+auth.json
