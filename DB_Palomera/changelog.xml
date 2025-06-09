@@ -12,4 +12,10 @@
     <changeSet id="002-add-users-table" author="santosa">
         <sqlFile path="changesets/002-add-users-table.sql"/>
     </changeSet>
+
+    <!-- New changeset for students table -->
+    <changeSet id="003-create-students-table" author="santosa">
+        <sqlFile path="changesets/003-create-students-table.sql"/>
+    </changeSet>
+
 </databaseChangeLog>
