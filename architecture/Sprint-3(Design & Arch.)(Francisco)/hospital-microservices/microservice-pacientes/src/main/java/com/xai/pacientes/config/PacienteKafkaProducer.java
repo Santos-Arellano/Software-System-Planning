@@ -1,3 +1,4 @@
+///Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Sprint-3(Design & Arch.)(Francisco)/hospital-microservices/microservice-pacientes/src/main/java/com/xai/pacientes/config/PacienteKafkaProducer.java
 package com.xai.pacientes.config;
 
 import org.springframework.beans.factory.annotation.Autowired;

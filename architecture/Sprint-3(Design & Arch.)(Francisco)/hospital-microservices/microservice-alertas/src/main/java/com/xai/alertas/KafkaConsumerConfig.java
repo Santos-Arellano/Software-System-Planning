@@ -1,20 +1,20 @@
+///Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Sprint-3(Design & Arch.)(Francisco)/hospital-microservices/microservice-alertas/src/main/java/com/xai/alertas/KafkaConsumerConfig.java
 package com.xai.alertas.config;
 
+import com.xai.alertas.model.Alerta;
+import com.xai.alertas.service.AlertaService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import com.xai.alertas.model.Alerta;
-import com.xai.alertas.service.AlertaService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Component;
-import java.time.LocalDateTime;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,15 +35,13 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }
 
-    @Component
+    @org.springframework.stereotype.Component
     public static class AlertaKafkaConsumer {
-
         @Autowired
         private AlertaService alertaService;
 
@@ -55,6 +53,17 @@ public class KafkaConsumerConfig {
             alerta.setFecha(LocalDateTime.now());
             alerta.setEstado("PENDIENTE");
             alerta.setDestinatario("admin");
+            alertaService.saveAlerta(alerta);
+        }
+
+        @KafkaListener(topics = "citas-topic", groupId = "alertas-group")
+        public void listenCitaUpdates(String message) {
+            Alerta alerta = new Alerta();
+            alerta.setMensaje("Nueva cita agendada: " + message);
+            alerta.setTipo("ALERT");
+            alerta.setFecha(LocalDateTime.now());
+            alerta.setEstado("PENDIENTE");
+            alerta.setDestinatario("doctor");
             alertaService.saveAlerta(alerta);
         }
     }

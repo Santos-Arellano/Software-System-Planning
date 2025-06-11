@@ -1,3 +1,4 @@
+///Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Sprint-3(Design & Arch.)(Francisco)/hospital-microservices/microservice-alertas/src/main/java/com/xai/alertas/controller/AlertaController.java
 package com.xai.alertas.controller;
 
 import com.xai.alertas.model.Alerta;

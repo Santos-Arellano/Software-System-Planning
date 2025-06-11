@@ -1,42 +1,42 @@
+///Users/santosa/Documents/GitHub/Software-System-Planning/architecture/Sprint-3(Design & Arch.)(Francisco)/hospital-microservices/microservice-citas/src/main/java/com/xai/citas/config/SecurityConfig.java
 package com.xai.citas.config;
 
-    import org.springframework.context.annotation.Bean;
-    import org.springframework.context.annotation.Configuration;
-    import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-    import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-    import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-    import org.springframework.security.web.SecurityFilterChain;
-    import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-    import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
-    @Configuration
-    @EnableWebSecurity
-    @EnableMethodSecurity
-    public class SecurityConfig {
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
 
-        @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http
-                .csrf().disable()
-                .authorizeHttpRequests(authorize -> authorize
-                    .requestMatchers("/actuator/**", "/actuator/health/**", "/health").permitAll()
-                    .anyRequest().authenticated()
-                )
-                .oauth2ResourceServer()
-                .jwt()
-                .jwtAuthenticationConverter(jwtAuthenticationConverter());
-            
-            return http.build();
-        }
-
-        @Bean
-        public JwtAuthenticationConverter jwtAuthenticationConverter() {
-            JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-            grantedAuthoritiesConverter.setAuthoritiesClaimName("realm_access.roles");
-            grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
-
-            JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-            jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
-            return jwtAuthenticationConverter;
-        }
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf().disable()
+            .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/actuator/**", "/actuator/health/**", "/health").permitAll()
+                .requestMatchers("/citas/public/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                .anyRequest().authenticated()
+            )
+            .oauth2ResourceServer()
+            .jwt()
+            .jwtAuthenticationConverter(jwtAuthenticationConverter());
+        return http.build();
     }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("realm_access.roles");
+        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        return jwtAuthenticationConverter;
+    }
+}

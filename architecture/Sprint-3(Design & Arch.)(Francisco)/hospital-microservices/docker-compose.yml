@@ -22,11 +22,11 @@ services:
     networks:
       - hospital-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health || exit 1"]
-      interval: 120s
-      timeout: 60s
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 60s
+      timeout: 30s
       retries: 10
-      start_period: 300s
+      start_period: 120s
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -43,7 +43,7 @@ services:
       start_period: 15s
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.5.0
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -52,12 +52,15 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,INTERNAL://kafka:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,INTERNAL://kafka:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
@@ -66,15 +69,16 @@ services:
       test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 5
+      start_period: 60s
 
   postgres:
-    image: postgres:latest
+    image: postgres:15-alpine
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: hospital
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     ports:
       - "5432:5432"
     volumes:
@@ -98,16 +102,23 @@ services:
     command: >
       sh -c '
         echo "Waiting for Keycloak to be ready..."
-        sleep 10
+        sleep 30
         echo "Creating Hospital realm..."
-        curl -X POST http://keycloak:8080/admin/realms \
-          -H "Content-Type: application/json" \
-          -H "Authorization: Bearer $$(curl -d "client_id=admin-cli" -d "username=admin" -d "password=admin" -d "grant_type=password" "http://keycloak:8080/realms/master/protocol/openid-connect/token" | jq -r ".access_token")" \
-          -d @/config/realm.json
-        echo "Realm created successfully"
+        ACCESS_TOKEN=$$(curl -s -d "client_id=admin-cli" -d "username=admin" -d "password=admin" -d "grant_type=password" "http://keycloak:8080/realms/master/protocol/openid-connect/token" | jq -r ".access_token")
+        if [ "$$ACCESS_TOKEN" != "null" ] && [ "$$ACCESS_TOKEN" != "" ]; then
+          curl -X POST http://keycloak:8080/admin/realms \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $$ACCESS_TOKEN" \
+            -d @/config/realm.json
+          echo "Realm created successfully"
+        else
+          echo "Failed to get access token"
+          exit 1
+        fi
       '
     networks:
       - hospital-net
+    restart: on-failure
 
   apigateway:
     build: ./api-gateway
@@ -123,18 +134,19 @@ services:
       - SPRING_CLOUD_LOADBALANCER_RETRY_BACKOFF_INITIAL_INTERVAL=1000
       - SPRING_CLOUD_LOADBALANCER_RETRY_BACKOFF_MAX_INTERVAL=5000
       - SPRING_CLOUD_LOADBALANCER_RETRY_BACKOFF_MULTIPLIER=2
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       keycloak:
         condition: service_healthy
     networks:
       - hospital-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -f http://localhost:8084/actuator/health || echo 'API Gateway still starting...'"]
+      test: ["CMD-SHELL", "curl -s -f http://localhost:8084/actuator/health || exit 1"]
       interval: 30s
       timeout: 15s
-      retries: 5
-      start_period: 60s
-    restart: on-failure
+      retries: 10
+      start_period: 90s
+    restart: unless-stopped
 
   pacientes:
     build: ./microservice-pacientes
@@ -147,11 +159,13 @@ services:
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
       - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - API_GATEWAY_URL=http://apigateway:8084
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - KEYCLOAK_AUTH_SERVER_URL=http://keycloak:8080
       - KEYCLOAK_REALM=hospital
       - KEYCLOAK_RESOURCE=hospital-client
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       postgres:
         condition: service_healthy
@@ -164,12 +178,12 @@ services:
     networks:
       - hospital-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -f http://localhost:8081/actuator/health || echo 'Still starting...'"]
+      test: ["CMD-SHELL", "curl -s -f http://localhost:8081/actuator/health || exit 1"]
       interval: 30s
       timeout: 15s
-      retries: 5
-      start_period: 60s
-    restart: on-failure
+      retries: 10
+      start_period: 120s
+    restart: unless-stopped
 
   citas:
     build: ./microservice-citas
@@ -182,11 +196,13 @@ services:
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
       - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - API_GATEWAY_URL=http://apigateway:8084
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - KEYCLOAK_AUTH_SERVER_URL=http://keycloak:8080
       - KEYCLOAK_REALM=hospital
       - KEYCLOAK_RESOURCE=hospital-client
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       postgres:
         condition: service_healthy
@@ -199,12 +215,12 @@ services:
     networks:
       - hospital-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -f http://localhost:8082/actuator/health || echo 'Still starting...'"]
+      test: ["CMD-SHELL", "curl -s -f http://localhost:8082/actuator/health || exit 1"]
       interval: 30s
       timeout: 15s
-      retries: 5
-      start_period: 60s
-    restart: on-failure
+      retries: 10
+      start_period: 120s
+    restart: unless-stopped
 
   alertas:
     build: ./microservice-alertas
@@ -217,6 +233,7 @@ services:
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
       - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_KAFKA_CONSUMER_GROUP_ID=alertas-group
       - SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET=earliest
@@ -224,6 +241,7 @@ services:
       - KEYCLOAK_AUTH_SERVER_URL=http://keycloak:8080
       - KEYCLOAK_REALM=hospital
       - KEYCLOAK_RESOURCE=hospital-client
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       postgres:
         condition: service_healthy
@@ -236,12 +254,12 @@ services:
     networks:
       - hospital-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -f http://localhost:8083/actuator/health || echo 'Still starting...'"]
+      test: ["CMD-SHELL", "curl -s -f http://localhost:8083/actuator/health || exit 1"]
       interval: 30s
       timeout: 15s
-      retries: 5
-      start_period: 60s
-    restart: on-failure
+      retries: 10
+      start_period: 120s
+    restart: unless-stopped
 
 volumes:
   postgres_data:
