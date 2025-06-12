@@ -1,3 +1,9 @@
-com/xai/pacientes/controller/HealthController.class
-appointment.proto
-application.yml
+com/xai/citas/util/JwtUtil.class
+com/xai/citas/config/CitaKafkaProducer.class
+com/xai/citas/controller/HealthController.class
+com/xai/citas/repository/CitaRepository.class
+com/xai/citas/model/Cita.class
+com/xai/citas/config/SecurityConfig.class
+com/xai/citas/controller/CitaController.class
+com/xai/citas/service/CitaService.class
+com/xai/citas/CitasApplication.class

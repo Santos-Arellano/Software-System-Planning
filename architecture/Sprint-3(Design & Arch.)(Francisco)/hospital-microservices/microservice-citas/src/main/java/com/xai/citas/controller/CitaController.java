@@ -6,6 +6,7 @@ import com.xai.citas.model.Cita;
 import com.xai.citas.repository.CitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,19 +22,22 @@ public class CitaController {
     private CitaKafkaProducer kafkaProducer;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DOCTOR')")
     public ResponseEntity<List<Cita>> getAllCitas() {
         return ResponseEntity.ok(citaRepository.findAll());
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DOCTOR')")
     public ResponseEntity<Cita> createCita(@RequestBody Cita cita) {
         Cita saved = citaRepository.save(cita);
         kafkaProducer.sendCitaUpdate("Nueva cita para " + cita.getPaciente() + " con " + cita.getDoctor());
         return ResponseEntity.ok(saved);
     }
 
-    @GetMapping("/public/status")
-    public ResponseEntity<String> getPublicStatus() {
-        return ResponseEntity.ok("Citas service is publicly accessible");
+    @GetMapping("/public")
+    @PreAuthorize("hasAnyRole('ROLE_PATIENT', 'ROLE_DOCTOR', 'ROLE_ADMIN')")
+    public ResponseEntity<List<Cita>> getPublicCitas() {
+        return ResponseEntity.ok(citaRepository.findAll());
     }
 }

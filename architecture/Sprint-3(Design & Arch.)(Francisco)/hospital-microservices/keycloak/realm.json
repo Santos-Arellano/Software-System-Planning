@@ -1,69 +1,109 @@
 {
-    "realm": "hospital",
-    "enabled": true,
-    "clients": [
-        {
-            "clientId": "hospital-client",
-            "secret": "hospital-client-secret",
-            "enabled": true,
-            "publicClient": false,
-            "protocol": "openid-connect",
-            "redirectUris": ["*"],
-            "standardFlowEnabled": true
-        }
-    ],
-    "roles": {
-        "realm": [
-            {
-                "name": "admin",
-                "description": "Administrator role"
-            },
-            {
-                "name": "patient",
-                "description": "Patient role"
-            },
-            {
-                "name": "doctor",
-                "description": "Doctor role" 
-            }
-        ]
-    },
-    "users": [
-        {
-            "username": "admin",
-            "enabled": true,
-            "credentials": [
-                {
-                    "type": "password",
-                    "value": "admin",
-                    "temporary": false
-                }
-            ],
-            "realmRoles": ["admin"]
-        },
-        {
-            "username": "patient",
-            "enabled": true,
-            "credentials": [
-                {
-                    "type": "password",
-                    "value": "patient",
-                    "temporary": false
-                }
-            ],
-            "realmRoles": ["patient"]
-        },
-        {
-            "username": "doctor",
-            "enabled": true,
-            "credentials": [
-                {
-                    "type": "password",
-                    "value": "doctor",
-                    "temporary": false
-                }
-            ],
-            "realmRoles": ["doctor"]
-        }
+  "realm": "hospital",
+  "enabled": true,
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Administrator role"
+      },
+      {
+        "name": "doctor", 
+        "description": "Doctor role"
+      },
+      {
+        "name": "patient",
+        "description": "Patient role"
+      }
     ]
+  },
+  "clients": [
+    {
+      "clientId": "hospital-client",
+      "name": "Hospital Client",
+      "secret": "hospital-client-secret",
+      "enabled": true,
+      "publicClient": false,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "1800"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Hospital",
+      "lastName": "Admin",
+      "email": "admin@hospital.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin"],
+      "requiredActions": []
+    },
+    {
+      "username": "doctor",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Dr.",
+      "lastName": "Smith",
+      "email": "doctor@hospital.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "doctor123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["doctor"],
+      "requiredActions": []
+    },
+    {
+      "username": "patient",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "John",
+      "lastName": "Doe", 
+      "email": "patient@hospital.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "patient123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["patient"],
+      "requiredActions": []
+    }
+  ]
 }

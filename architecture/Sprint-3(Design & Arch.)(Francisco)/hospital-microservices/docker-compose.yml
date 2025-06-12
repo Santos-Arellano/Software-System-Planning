@@ -1,38 +1,101 @@
 services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
+    container_name: hospital-microservices-keycloak-1
     ports:
       - "8080:8080"
+      - "9000:9000"
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
       - KC_HEALTH_ENABLED=true
       - KC_METRICS_ENABLED=true
-      - KC_DB=dev-file
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+      - KC_DB_USERNAME=admin
+      - KC_DB_PASSWORD=admin
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - JAVA_OPTS=-Xms256m -Xmx512m
+      - KC_HTTP_ENABLED=true
     command:
-      - start-dev
-      - --http-port=8080
-      - --hostname-strict=false
-      - --hostname=localhost
+    - start
+    - --http-port=8080
+    - --http-management-port=9000
+    - --hostname-strict=false
+    - --hostname=localhost
+    - --db-url=jdbc:postgresql://postgres:5432/keycloak
+    - --db-username=admin
+    - --db-password=admin
     volumes:
       - keycloak_data:/opt/keycloak/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - hospital-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/realms/hospital/.well-known/openid-configuration"]
       interval: 60s
       timeout: 30s
       retries: 10
-      start_period: 120s
+      start_period: 300s
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: keycloak
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hospital-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  keycloak-config:
+    image: curlimages/curl:latest
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    volumes:
+      - ./keycloak:/config
+    command: >
+      sh -c '
+        for i in {1..5}; do
+          echo "Attempt $$i: Waiting for Keycloak..."
+          sleep 30
+          ACCESS_TOKEN=$$(curl -s -d "client_id=admin-cli" -d "username=admin" -d "password=admin" -d "grant_type=password" "http://keycloak:8080/realms/master/protocol/openid-connect/token" | jq -r ".access_token")
+          if [ "$$ACCESS_TOKEN" != "null" ] && [ "$$ACCESS_TOKEN" != "" ]; then
+            curl -s -X POST http://keycloak:8080/admin/realms \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $$ACCESS_TOKEN" \
+              -d @/config/realm.json && echo "Realm created successfully" && exit 0
+          fi
+          echo "Failed to get access token, retrying..."
+        done
+        echo "Failed to create realm after 5 attempts"
+        exit 1
+      '
+    networks:
+      - hospital-net
+    restart: on-failure
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      mem_limit: 1536m
+      mem_reservation: 1024m
     networks:
       - hospital-net
     healthcheck:
@@ -61,64 +124,19 @@ services:
       KAFKA_LOG_RETENTION_HOURS: 168
       KAFKA_LOG_SEGMENT_BYTES: 1073741824
       KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
+      mem_limit: 1536m
+      mem_reservation: 1024m
+
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
       - hospital-net
     healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
-
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: hospital
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - hospital-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d hospital"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  keycloak-config:
-    image: curlimages/curl:latest
-    depends_on:
-      keycloak:
-        condition: service_healthy
-    volumes:
-      - ./keycloak:/config
-    command: >
-      sh -c '
-        echo "Waiting for Keycloak to be ready..."
-        sleep 30
-        echo "Creating Hospital realm..."
-        ACCESS_TOKEN=$$(curl -s -d "client_id=admin-cli" -d "username=admin" -d "password=admin" -d "grant_type=password" "http://keycloak:8080/realms/master/protocol/openid-connect/token" | jq -r ".access_token")
-        if [ "$$ACCESS_TOKEN" != "null" ] && [ "$$ACCESS_TOKEN" != "" ]; then
-          curl -X POST http://keycloak:8080/admin/realms \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $$ACCESS_TOKEN" \
-            -d @/config/realm.json
-          echo "Realm created successfully"
-        else
-          echo "Failed to get access token"
-          exit 1
-        fi
-      '
-    networks:
-      - hospital-net
-    restart: on-failure
 
   apigateway:
     build: ./api-gateway
@@ -137,6 +155,8 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       keycloak:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     networks:
       - hospital-net
@@ -261,11 +281,10 @@ services:
       start_period: 120s
     restart: unless-stopped
 
-volumes:
-  postgres_data:
-  kafka_data:
-  keycloak_data:
-
 networks:
   hospital-net:
-    driver: bridge
+
+volumes:
+  postgres_data:
+  keycloak_data:
+  kafka_data:

@@ -1,8 +1,9 @@
 com/xai/pacientes/PacientesApplication.class
 com/xai/pacientes/model/Paciente.class
 com/xai/pacientes/service/PacienteService.class
-main/java/com/xai/pacientes/repository/PacienteRepository.class
 com/xai/pacientes/config/SecurityConfig.class
 com/xai/pacientes/util/JwtUtil.class
 com/xai/pacientes/controller/HealthController.class
+com/xai/pacientes/config/PacienteKafkaProducer.class
 com/xai/pacientes/controller/PacienteController.class
+com/xai/pacientes/repository/PacienteRepository.class

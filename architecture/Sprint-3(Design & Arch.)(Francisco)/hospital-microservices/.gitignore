@@ -1,0 +1,29 @@
+# Create a .gitignore file in your project root
+cat > .gitignore << 'EOF'
+# Build artifacts
+target/
+*.jar
+*.war
+*.class
+
+# Video files
+*.mov
+*.mp4
+*.avi
+*.mkv
+
+# Other large files
+*.zip
+*.rar
+*.tar.gz
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+EOF
